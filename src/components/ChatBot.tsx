@@ -37,52 +37,41 @@ export function ChatBot({
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages, isTyping]);
 
-  async function handleSendMessage(text: string) {
+async function handleSendMessage(text: string) {
     const trimmed = text.trim();
     if (!trimmed || isTyping) return;
 
+    // 1. Show the user's message immediately
     const userMsg: ChatMessage = { id: `u-${Date.now()}`, role: "user", content: trimmed };
     setMessages((prev) => [...prev, userMsg]);
     setInput("");
     setIsTyping(true);
 
-    try {
-      // 1. MAKE SURE YOUR KEY IS CORRECT
-      const API_KEY = "AIzaSyAV6l5K917lKTaOJKzCBPQl_QbaYdPmFLU"; 
+    // 2. A list of "Fake" responses for prototyping
+    const fakeResponses = [
+      "I can help you with the Triage Queue. Red patients are critical.",
+      "To register a new patient, click the teal button at the top right.",
+      "The ER wait time is currently 22 minutes.",
+      "I've highlighted the Lab Results section for you.",
+      "I'm sorry, I don't have access to that specific patient record yet.",
+      "Wait, let me double-check the protocol updates for this week."
+    ];
 
-      // 2. UPDATED TO GEMINI 2.0 FLASH (1.5 is likely retired)
-      const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.0-pro:generateContent?key=${API_KEY}`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: trimmed }] }],
-          }),
-        }
-      );
+    // 3. Simulate a "Thinking" delay so it feels like a real bot
+    setTimeout(() => {
+      // Pick a random message from the list above
+      const randomIndex = Math.floor(Math.random() * fakeResponses.length);
+      const randomReply = fakeResponses[randomIndex];
 
-      const data = await response.json();
+      const botMsg: ChatMessage = { 
+        id: `b-${Date.now()}`, 
+        role: "bot", 
+        content: randomReply 
+      };
 
-      if (!response.ok) {
-        throw new Error(data.error?.message || `Google API Error: ${response.status}`);
-      }
-
-      const replyText = data.candidates[0].content.parts[0].text;
-      setMessages((m) => [...m, { id: `b-${Date.now()}`, role: "bot", content: replyText }]);
-    } catch (err: any) {
-      console.error("Gemini Error:", err);
-      setMessages((m) => [
-        ...m,
-        { 
-          id: `b-${Date.now()}`, 
-          role: "bot", 
-          content: `SYSTEM ERROR: ${err.message}` 
-        },
-      ]);
-    } finally {
+      setMessages((m) => [...m, botMsg]);
       setIsTyping(false);
-    }
+    }, 1500); // 1.5 second delay
   }
 
   return (
