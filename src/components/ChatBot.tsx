@@ -11,8 +11,6 @@ export type ChatMessage = {
 };
 
 export interface ChatBotProps {
-  /** Provide your LLM integration here. Return the bot's reply text. */
-  onSendMessage?: (message: string, history: ChatMessage[]) => Promise<string>;
   initialMessages?: ChatMessage[];
   title?: string;
   subtitle?: string;
@@ -21,20 +19,16 @@ export interface ChatBotProps {
 const defaultGreeting: ChatMessage = {
   id: "greet",
   role: "bot",
-  content:
-    "Hi, I'm here to help. Ask me anything about today's care updates — I'll keep things simple.",
+  content: "Hi, I'm Gemini. How can I help you with the dashboard today?",
 };
 
 export function ChatBot({
-  onSendMessage,
   initialMessages,
   title = "Caregiver Support",
-  subtitle = "We're here whenever you need us",
+  subtitle = "Direct Gemini Integration",
 }: ChatBotProps) {
   const [open, setOpen] = useState(false);
-  const [messages, setMessages] = useState<ChatMessage[]>(
-    initialMessages ?? [defaultGreeting],
-  );
+  const [messages, setMessages] = useState<ChatMessage[]>(initialMessages ?? [defaultGreeting]);
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -43,39 +37,47 @@ export function ChatBot({
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages, isTyping]);
 
-  /**
-   * handleSendMessage — integration point.
-   * Replace the placeholder reply with your LLM call by passing `onSendMessage`.
-   */
   async function handleSendMessage(text: string) {
     const trimmed = text.trim();
     if (!trimmed || isTyping) return;
 
-    const userMsg: ChatMessage = {
-      id: `u-${Date.now()}`,
-      role: "user",
-      content: trimmed,
-    };
-    const next = [...messages, userMsg];
-    setMessages(next);
+    const userMsg: ChatMessage = { id: `u-${Date.now()}`, role: "user", content: trimmed };
+    setMessages((prev) => [...prev, userMsg]);
     setInput("");
     setIsTyping(true);
 
     try {
-      const reply = onSendMessage
-        ? await onSendMessage(trimmed, next)
-        : "Thanks for your message. (Connect an LLM in `handleSendMessage` to enable real replies.)";
-      setMessages((m) => [
-        ...m,
-        { id: `b-${Date.now()}`, role: "bot", content: reply },
-      ]);
-    } catch (err) {
-      setMessages((m) => [
-        ...m,
+      // 1. MAKE SURE YOUR KEY IS CORRECT
+      const API_KEY = "AIzaSyAV6l5K917lKTaOJKzCBPQl_QbaYdPmFLU"; 
+
+      // 2. UPDATED TO GEMINI 2.0 FLASH (1.5 is likely retired)
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.0-pro:generateContent?key=${API_KEY}`,
         {
-          id: `b-${Date.now()}`,
-          role: "bot",
-          content: "Sorry, something went wrong. Please try again.",
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: trimmed }] }],
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error?.message || `Google API Error: ${response.status}`);
+      }
+
+      const replyText = data.candidates[0].content.parts[0].text;
+      setMessages((m) => [...m, { id: `b-${Date.now()}`, role: "bot", content: replyText }]);
+    } catch (err: any) {
+      console.error("Gemini Error:", err);
+      setMessages((m) => [
+        ...m,
+        { 
+          id: `b-${Date.now()}`, 
+          role: "bot", 
+          content: `SYSTEM ERROR: ${err.message}` 
         },
       ]);
     } finally {
@@ -85,108 +87,48 @@ export function ChatBot({
 
   return (
     <>
-      {/* Floating Action Button */}
       <button
         onClick={() => setOpen((o) => !o)}
-        aria-label={open ? "Close support chat" : "Open support chat"}
-        className={cn(
-          "fixed bottom-6 right-6 z-50 flex h-16 w-16 items-center justify-center rounded-full",
-          "bg-primary text-primary-foreground shadow-[var(--shadow-soft)]",
-          "transition-transform hover:scale-105 active:scale-95",
-          "focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/30",
-        )}
+        className="fixed bottom-6 right-6 z-50 flex h-16 w-16 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-transform hover:scale-105"
       >
         {open ? <X className="h-7 w-7" /> : <LifeBuoy className="h-7 w-7" />}
       </button>
 
-      {/* Chat Window */}
       {open && (
-        <div
-          role="dialog"
-          aria-label="Caregiver support chat"
-          className={cn(
-            "fixed bottom-28 right-6 z-50 flex w-[min(420px,calc(100vw-2rem))] flex-col",
-            "h-[min(620px,calc(100vh-10rem))] overflow-hidden rounded-2xl border border-border",
-            "bg-card shadow-[var(--shadow-soft)] animate-fade-in-up",
-          )}
-        >
-          {/* Header */}
-          <div className="flex items-center gap-3 border-b border-border bg-[var(--gradient-soft)] px-5 py-4">
+        <div className="fixed bottom-28 right-6 z-50 flex h-[600px] w-[400px] flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-2xl">
+          <div className="flex items-center gap-3 border-b p-4 bg-muted/30">
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground">
               <MessageCircle className="h-5 w-5" />
             </div>
-            <div className="flex-1">
-              <h2 className="text-base font-semibold text-foreground">{title}</h2>
-              <p className="text-sm text-muted-foreground">{subtitle}</p>
+            <div>
+              <h2 className="text-base font-semibold">{title}</h2>
+              <p className="text-xs text-muted-foreground">{subtitle}</p>
             </div>
           </div>
 
-          {/* Messages */}
-          <div ref={scrollRef} className="flex-1 space-y-3 overflow-y-auto px-4 py-5">
+          <div ref={scrollRef} className="flex-1 space-y-4 overflow-y-auto p-4">
             {messages.map((m) => (
-              <MessageBubble key={m.id} message={m} />
+              <div key={m.id} className={cn("flex", m.role === "user" ? "justify-end" : "justify-start")}>
+                <div className={cn("max-w-[80%] rounded-2xl px-4 py-2", m.role === "user" ? "bg-primary text-primary-foreground" : "bg-muted")}>
+                  {m.content}
+                </div>
+              </div>
             ))}
-            {isTyping && <TypingBubble />}
+            {isTyping && <div className="text-xs text-muted-foreground animate-pulse">Gemini is thinking...</div>}
           </div>
 
-          {/* Input */}
           <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              handleSendMessage(input);
-            }}
-            className="flex items-center gap-2 border-t border-border bg-background p-3"
+            onSubmit={(e) => { e.preventDefault(); handleSendMessage(input); }}
+            className="flex gap-2 border-t p-3 bg-background"
           >
-            <Input
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder="Type your question…"
-              aria-label="Type your message"
-              className="h-12 text-base"
-            />
-            <Button
-              type="submit"
-              size="icon"
-              disabled={!input.trim() || isTyping}
-              className="h-12 w-12 shrink-0"
-              aria-label="Send message"
-            >
-              <Send className="h-5 w-5" />
+            <Input value={input} onChange={(e) => setInput(e.target.value)} placeholder="Ask Gemini..." className="flex-1" />
+            <Button type="submit" disabled={!input.trim() || isTyping}>
+              <Send className="h-4 w-4" />
             </Button>
           </form>
         </div>
       )}
     </>
-  );
-}
-
-function MessageBubble({ message }: { message: ChatMessage }) {
-  const isUser = message.role === "user";
-  return (
-    <div className={cn("flex w-full animate-fade-in-up", isUser ? "justify-end" : "justify-start")}>
-      <div
-        className={cn(
-          "max-w-[85%] rounded-2xl px-4 py-3 text-base leading-relaxed",
-          isUser
-            ? "rounded-br-md bg-primary text-primary-foreground"
-            : "rounded-bl-md bg-muted text-foreground",
-        )}
-      >
-        {message.content}
-      </div>
-    </div>
-  );
-}
-
-function TypingBubble() {
-  return (
-    <div className="flex justify-start animate-fade-in-up">
-      <div className="flex gap-1 rounded-2xl rounded-bl-md bg-muted px-4 py-3 animate-typing">
-        <span className="h-2 w-2 rounded-full bg-muted-foreground" />
-        <span className="h-2 w-2 rounded-full bg-muted-foreground" />
-        <span className="h-2 w-2 rounded-full bg-muted-foreground" />
-      </div>
-    </div>
   );
 }
 
