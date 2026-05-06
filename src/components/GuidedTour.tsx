@@ -78,13 +78,13 @@ export function GuidedTour({ steps, open, onClose }: GuidedTourProps) {
   })();
 
   return createPortal(
-    <div className="fixed inset-0 z-40">
+    <div className="fixed inset-0 z-[80]">
       <div className="absolute inset-0 bg-foreground/40 backdrop-blur-[2px]" onClick={onClose} />
       <div
         role="dialog"
         aria-label={current.title}
         style={tooltipStyle}
-        className="fixed z-50 rounded-2xl border border-border bg-card p-5 shadow-[var(--shadow-soft)] animate-fade-in-up"
+        className="fixed z-[90] rounded-2xl border border-border bg-card p-5 shadow-[var(--shadow-soft)] animate-fade-in-up"
       >
         <div className="mb-3 flex items-center justify-between gap-3">
           <div className="inline-flex items-center gap-2 rounded-full bg-accent px-3 py-1 text-xs font-medium text-accent-foreground">
