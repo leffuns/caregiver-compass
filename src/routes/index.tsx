@@ -14,24 +14,24 @@ export const Route = createFileRoute("/")({
 const tourSteps: TourStep[] = [
   {
     targetId: "card-medication",
-    badge: "New Release",
-    title: "Updated Medication Schedule",
+    badge: "New Protocol",
+    title: "Updated Medication Administration Schedule",
     body:
-      "Mom's evening dose has shifted from 8:00 PM to 7:30 PM, and a new low-dose tablet was added at lunch. Don't worry — we've already updated her reminders for you.",
+      "Evening rounds have shifted from 8:00 PM to 7:30 PM, and a new lunchtime Vitamin D dose was added to the standing orders. Patient reminders on the ward tablets have already been updated.",
   },
   {
     targetId: "card-vitals",
     badge: "Protocol Update",
-    title: "Gentler Vitals Routine",
+    title: "Reduced Vitals Frequency",
     body:
-      "You now only need to check blood pressure twice a day instead of four. The care team agreed this is plenty for someone doing as well as she is.",
+      "For stable patients, vitals are now recorded twice per shift instead of every two hours. Use clinical judgement to escalate if a reading falls outside the new thresholds.",
   },
   {
     targetId: "card-notes",
-    badge: "Helpful Tip",
-    title: "Daily Notes are Now Optional",
+    badge: "Workflow Change",
+    title: "Patient Registration Notes Streamlined",
     body:
-      "Writing a daily note is no longer required. Jot something down only when you notice a change worth sharing — quality over quantity.",
+      "When registering a patient, free-text notes are now optional. Only add a note if there is something the next shift needs to know — quality over quantity.",
   },
 ];
 
@@ -49,7 +49,7 @@ function Index() {
             </div>
             <div>
               <h1 className="text-xl font-semibold text-foreground">Caregiver Portal</h1>
-              <p className="text-sm text-muted-foreground">Welcome back, Sarah</p>
+              <p className="text-sm text-muted-foreground">Welcome back, Sara</p>
             </div>
           </div>
           <Button
@@ -71,9 +71,9 @@ function Index() {
               <Bell className="h-5 w-5" />
             </div>
             <div className="flex-1">
-              <h2 className="text-lg font-semibold text-foreground">3 care updates this week</h2>
+              <h2 className="text-lg font-semibold text-foreground">3 protocol updates this week</h2>
               <p className="mt-1 text-base text-muted-foreground">
-                We've made a few changes to keep things simple. Tap{" "}
+                A few workflow changes affect your registration and rounding tasks. Tap{" "}
                 <span className="font-medium text-foreground">Demo Change</span> for a quick walkthrough.
               </p>
             </div>
@@ -84,25 +84,25 @@ function Index() {
           <DashboardCard
             id="card-medication"
             icon={<Pill className="h-6 w-6" />}
-            title="Medication Schedule"
+            title="Medication Administration"
             isNew
             highlight
           >
             <ul className="space-y-2 text-base text-muted-foreground">
-              <li>• 8:00 AM — Lisinopril 10mg</li>
+              <li>• 8:00 AM — Lisinopril 10mg (standing)</li>
               <li>• 12:30 PM — New: Vitamin D 1000 IU</li>
-              <li>• 7:30 PM — Metformin 500mg</li>
+              <li>• 7:30 PM — Metformin 500mg (shifted from 8:00 PM)</li>
             </ul>
           </DashboardCard>
 
           <DashboardCard
             id="card-vitals"
             icon={<Activity className="h-6 w-6" />}
-            title="Vitals Check"
+            title="Vitals Rounds"
             isNew
           >
             <p className="text-base text-muted-foreground">
-              Twice daily — morning and evening. Last reading was a calm{" "}
+              Twice per shift for stable patients. Last bay average was a calm{" "}
               <span className="font-medium text-foreground">122 / 78</span>.
             </p>
           </DashboardCard>
@@ -110,20 +110,20 @@ function Index() {
           <DashboardCard
             id="card-notes"
             icon={<FileText className="h-6 w-6" />}
-            title="Daily Notes"
+            title="Registration Notes"
             isNew
           >
             <p className="text-base text-muted-foreground">
-              Optional. Share anything that feels important — even small wins.
+              Optional during patient intake. Add a note only when the next shift needs context.
             </p>
           </DashboardCard>
 
           <DashboardCard
             icon={<CalendarClock className="h-6 w-6" />}
-            title="Upcoming Appointments"
+            title="Today's Admissions"
           >
             <p className="text-base text-muted-foreground">
-              Dr. Patel — Thursday, 10:00 AM (Telehealth)
+              4 patients booked in for registration before noon — next: 10:00 AM with Dr. Patel.
             </p>
           </DashboardCard>
         </div>

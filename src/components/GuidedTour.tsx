@@ -52,12 +52,16 @@ export function GuidedTour({ steps, open, onClose }: GuidedTourProps) {
     ? (() => {
         const margin = 16;
         const tooltipWidth = 360;
+        const tooltipHeight = 260;
         const spaceBelow = window.innerHeight - rect.bottom;
-        const placeBelow = spaceBelow > 240 || rect.top < 240;
-        const top = placeBelow ? rect.bottom + margin : rect.top - margin - 220;
+        const spaceAbove = rect.top;
+        const placeBelow = spaceBelow >= tooltipHeight + margin || spaceBelow >= spaceAbove;
+        let top = placeBelow ? rect.bottom + margin : rect.top - margin - tooltipHeight;
+        // Clamp vertically so the tooltip is always fully visible
+        top = Math.max(16, Math.min(top, window.innerHeight - tooltipHeight - 16));
         let left = rect.left + rect.width / 2 - tooltipWidth / 2;
         left = Math.max(16, Math.min(left, window.innerWidth - tooltipWidth - 16));
-        return { top: Math.max(16, top), left, width: tooltipWidth };
+        return { top, left, width: tooltipWidth, maxHeight: window.innerHeight - 32, overflowY: "auto" };
       })()
     : { top: "50%", left: "50%", transform: "translate(-50%, -50%)", width: 360 };
 
