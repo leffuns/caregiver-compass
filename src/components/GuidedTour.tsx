@@ -48,22 +48,34 @@ export function GuidedTour({ steps, open, onClose }: GuidedTourProps) {
 
   if (!open || !current || typeof document === "undefined") return null;
 
-  const tooltipStyle: React.CSSProperties = rect
-    ? (() => {
-        const margin = 16;
-        const tooltipWidth = 360;
-        const tooltipHeight = 260;
-        const spaceBelow = window.innerHeight - rect.bottom;
-        const spaceAbove = rect.top;
-        const placeBelow = spaceBelow >= tooltipHeight + margin || spaceBelow >= spaceAbove;
-        let top = placeBelow ? rect.bottom + margin : rect.top - margin - tooltipHeight;
-        // Clamp vertically so the tooltip is always fully visible
-        top = Math.max(16, Math.min(top, window.innerHeight - tooltipHeight - 16));
-        let left = rect.left + rect.width / 2 - tooltipWidth / 2;
-        left = Math.max(16, Math.min(left, window.innerWidth - tooltipWidth - 16));
-        return { top, left, width: tooltipWidth, maxHeight: window.innerHeight - 32, overflowY: "auto" };
-      })()
-    : { top: "50%", left: "50%", transform: "translate(-50%, -50%)", width: 360 };
+  const isNarrow = typeof window !== "undefined" && window.innerWidth < 768;
+  const tooltipStyle: React.CSSProperties = (() => {
+    if (!rect) {
+      return { top: "50%", left: "50%", transform: "translate(-50%, -50%)", width: 360 };
+    }
+    if (isNarrow) {
+      // Dock to the bottom of the viewport on small screens so it never overlaps the highlight
+      return {
+        left: 12,
+        right: 12,
+        bottom: 12,
+        width: "auto",
+        maxHeight: "45vh",
+        overflowY: "auto",
+      };
+    }
+    const margin = 16;
+    const tooltipWidth = 380;
+    const tooltipHeight = 260;
+    const spaceBelow = window.innerHeight - rect.bottom;
+    const spaceAbove = rect.top;
+    const placeBelow = spaceBelow >= tooltipHeight + margin || spaceBelow >= spaceAbove;
+    let top = placeBelow ? rect.bottom + margin : rect.top - margin - tooltipHeight;
+    top = Math.max(16, Math.min(top, window.innerHeight - tooltipHeight - 16));
+    let left = rect.left + rect.width / 2 - tooltipWidth / 2;
+    left = Math.max(16, Math.min(left, window.innerWidth - tooltipWidth - 16));
+    return { top, left, width: tooltipWidth, maxHeight: window.innerHeight - 32, overflowY: "auto" };
+  })();
 
   return createPortal(
     <div className="fixed inset-0 z-40">
